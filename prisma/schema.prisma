@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String     @id @default(uuid())
+  givenName        String
+  surname          String
+  avatar           String?
+  email            String     @unique
+  password         String
+  status           Status     @default(UNVERIFIED)
+  createdAt        DateTime   @default(now())
+  candidateProfile Candidate?
+  hrProfile        HR?
+  role             Role[]     @default([CANDIDATE])
+}
+
+model Company {
+  id            String         @id @default(uuid())
+  name          String
+  address       String
+  status        Status         @default(UNVERIFIED)
+  scale         BusinessScale
+  website       String
+  avatar        String?
+  wallpaper     String?
+  description   String?
+  representer   String?
+  mapLink       String?
+  follower      Candidate[]
+  points        Int            @default(1000)
+  loginDate     DateTime?
+  companyImages CompanyImage[]
+  hrs           HR[]
+  jobs          Job[]
+  district      District       @relation(fields: [districtId], references: [id])
+  districtId    Int
+}
+
+model CompanyImage {
+  id        String  @id @default(uuid())
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+  imageLink String
+}
+
+model Candidate {
+  id          String        @id
+  cvLink      String?
+  user        User          @relation(fields: [id], references: [id])
+  appliedJobs Job[]         @relation("appliedJobs")
+  markedJobs  Job[]         @relation("markedJobs")
+  following   Company[]
+  jobReported JobReported[]
+}
+
+model HR {
+  id          String  @id
+  verified    Boolean @default(false)
+  phoneNumber String
+  user        User    @relation(fields: [id], references: [id])
+  posts       Job[]
+  manager     HR?     @relation("HRManager", fields: [managerId], references: [id])
+  managerId   String?
+  employees   HR[]    @relation("HRManager")
+  company     Company @relation(fields: [companyId], references: [id])
+  companyId   String
+}
+
+model Job {
+  id              String        @id @default(uuid())
+  title           String
+  description     String
+  benefit         String
+  requirement     String
+  createAt        DateTime      @default(now())
+  updateAt        DateTime      @updatedAt
+  expiredAt       DateTime
+  minSalary       Int?
+  maxSalary       Int?
+  currency        Currency?     @relation(fields: [currencyId], references: [id])
+  currencyId      Int?
+  recruitAmount   Int
+  visible         Boolean       @default(true)
+  authors         HR[]
+  company         Company       @relation(fields: [companyId], references: [id])
+  companyId       String
+  candidates      Candidate[]   @relation("appliedJobs")
+  markedByList    Candidate[]   @relation("markedJobs")
+  cities          City[]
+  workTypes       WorkType[]
+  jobReportedList JobReported[]
+}
+
+model JobReported {
+  id           String        @id @default(uuid())
+  candidate    Candidate     @relation(fields: [candidateId], references: [id])
+  candidateId  String
+  job          Job           @relation(fields: [jobId], references: [id])
+  jobId        String
+  createdAt    DateTime      @default(now())
+  detail       String
+  reportImages ReportImage[]
+
+  @@unique([candidateId, jobId])
+}
+
+model ReportImage {
+  id        String      @id @default(uuid())
+  report    JobReported @relation(fields: [reportId], references: [id])
+  reportId  String
+  imageLink String
+}
+
+model Country {
+  code      String @id
+  name      String
+  phoneCode String
+  cities    City[]
+}
+
+model City {
+  id          Int        @id @default(autoincrement())
+  name        String
+  cityCode    String
+  country     Country    @relation(fields: [countryCode], references: [code])
+  countryCode String
+  districts   District[]
+  jobs        Job[]
+}
+
+model District {
+  id           Int       @id @default(autoincrement())
+  name         String
+  districtCode String
+  city         City      @relation(fields: [cityId], references: [id])
+  cityId       Int
+  companies    Company[]
+}
+
+model WorkType {
+  id   Int    @id @default(autoincrement())
+  type String @unique
+  jobs Job[]
+}
+
+model Currency {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  symbol String?
+  Job    Job[]
+}
+
+enum Role {
+  CANDIDATE
+  HR
+  MANAGER
+  ADMIN
+}
+
+enum BusinessScale {
+  MAX50
+  MAX100
+  MAX300
+  MAX500
+  NOMAX
+}
+
+enum Status {
+  VERIFIED
+  UNVERIFIED
+  SUSPENDED
+}
