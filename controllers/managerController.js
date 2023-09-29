@@ -236,6 +236,22 @@ const updateCompanyProfile = async (req, res) => {
         id: companyId,
       },
       data: updateObject,
+      include: {
+        district: {
+          include: {
+            city: {
+              include: {
+                country: true,
+              },
+            },
+          },
+        },
+        companyImages: {
+          select: {
+            imageLink: true,
+          },
+        },
+      },
     })
   );
 
@@ -249,7 +265,7 @@ const updateCompanyProfile = async (req, res) => {
       ...deleteImages
     ]);
     await Promise.all(removeFiles).catch((e) => console.log(e));
-    return res.status(201).json({ message: "Update successfully" });
+    return res.status(200).json(updateCompany);
   } else {
     const removeFiles = firebaseDelete([
       ...avatarDirectory, 
@@ -309,12 +325,16 @@ const attendance = async (req, res) => {
           loginDate: new Date(),
           points: newPoints,
         },
+        select: {
+          points: true,
+          loginDate: true,
+        },
       }),
     ])
   );
 
   if (!attendanceError) {
-    return res.status(201).json({ attended: true, points: newPoints });
+    return res.status(201).json({ ...attendance[0], attended: true });
   } else {
     return res.status(attendanceStatus).json({ message: attendanceError });
   }

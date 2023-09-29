@@ -295,6 +295,7 @@ const getAllAppliedJobs = async (req, res) => {
           visible: true,
           company: {
             select: {
+              id: true,
               name: true,
               avatar: true,
               wallpaper: true,
@@ -410,6 +411,7 @@ const getAllMarkedJobs = async (req, res) => {
           visible: true,
           company: {
             select: {
+              id: true,
               name: true,
               avatar: true,
               wallpaper: true,

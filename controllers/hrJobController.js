@@ -38,7 +38,7 @@ const createJob = async (req, res) => {
     (minSalary && !currencyId) ||
     (maxSalary && !currencyId)
   ) {
-    return res.status(400).json({ message: "All fields are required" });
+    return res.status(400).json({ message: "Missing required fields" });
   }
 
   // Check if company has enough points for package

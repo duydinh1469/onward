@@ -209,6 +209,24 @@ const updateUserProfile = async (req, res) => {
         id: userInfo.id,
       },
       data: updateObject,
+      select: {
+        givenName: true,
+        surname: true,
+        email: true,
+        status: true,
+        avatar: true,
+        createdAt: true,
+        candidateProfile: {
+          select: {
+            cvLink: true,
+          },
+        },
+        hrProfile: {
+          select: {
+            phoneNumber: true,
+          },
+        },
+      },
     })
   );
 
@@ -221,7 +239,7 @@ const updateUserProfile = async (req, res) => {
       ...removeCV, 
     ]);
     await Promise.all(removeFiles).catch((e) => console.log(e));
-    return res.status(201).json({ message: "Update successfully" });
+    return res.status(201).json(updateProfile);
   } else {
     const removeFiles = firebaseDelete([
       ...avatarDirectory, 
